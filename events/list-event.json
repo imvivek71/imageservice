@@ -1,0 +1,9 @@
+{
+  "httpMethod": "GET",
+  "path": "/images",
+  "headers": {},
+  "queryStringParameters": {
+    "user_id": "user123",
+    "tag": "landscape"
+  }
+}
