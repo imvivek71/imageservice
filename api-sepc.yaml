@@ -1,0 +1,109 @@
+openapi: 3.0.3
+info:
+  title: Image Service API
+  version: 1.0.0
+  description: APIs for uploading, listing, viewing, and deleting images with metadata.
+servers:
+  - url: http://localhost:8080
+paths:
+  /images:
+    post:
+      summary: Upload an image with metadata
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                user_id:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageMetadata'
+    get:
+      summary: List all images with filters
+      parameters:
+        - in: query
+          name: user_id
+          schema:
+            type: string
+          description: Filter by user ID
+        - in: query
+          name: tag
+          schema:
+            type: string
+          description: Filter by tag
+      responses:
+        '200':
+          description: List of images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImageMetadata'
+  /images/{image_id}:
+    get:
+      summary: View/download an image
+      parameters:
+        - in: path
+          name: image_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image file or presigned URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_url:
+                    type: string
+                    description: Presigned URL to download the image
+    delete:
+      summary: Delete an image
+      parameters:
+        - in: path
+          name: image_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Image deleted successfully
+components:
+  schemas:
+    ImageMetadata:
+      type: object
+      properties:
+        image_id:
+          type: string
+        user_id:
+          type: string
+        upload_timestamp:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        s3_url:
+          type: string
