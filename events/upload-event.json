@@ -1,0 +1,14 @@
+{
+  "httpMethod": "POST",
+  "path": "/images",
+  "headers": {
+    "Content-Type": "multipart/form-data"
+  },
+  "queryStringParameters": {
+    "user_id": "user123",
+    "tags": "nature,landscape",
+    "description": "Beautiful mountain view"
+  },
+  "body": "UEsDBBQACAAIAHl+rVcAAAAAAAAAAAAAAAA=",
+  "isBase64Encoded": true
+}

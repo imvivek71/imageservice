@@ -1,3 +1,8 @@
+<!--
+Author: Vivek Kuumar Goswami
+Date: January 15, 2026
+-->
+
 # Image Service API - Roadmap & Architecture
 
 ## Overview
@@ -12,10 +17,11 @@ This project is a scalable image service backend (like Instagram) supporting ima
 - **LocalStack**: Local AWS cloud stack for development/testing.
 
 ### High-Level Flow
-1. **Upload Image**: User uploads image + metadata → API Gateway → Lambda → S3 (image) + DynamoDB (metadata)
-2. **List Images**: User requests list with filters → API Gateway → Lambda → DynamoDB (query)
-3. **View/Download Image**: User requests image → API Gateway → Lambda → S3 (presigned URL or direct download)
-4. **Delete Image**: User requests delete → API Gateway → Lambda → S3 (delete) + DynamoDB (delete)
+1. **Upload Image**: User uploads image + metadata → API Gateway → Lambda → S3 (original.jpg) + DynamoDB (metadata with pending status)
+2. **Process Image** (Async): S3 Event triggers Image Processor Lambda → Download original → Create medium & thumbnail → S3 + Update DynamoDB
+3. **List Images**: User requests list with filters → API Gateway → Lambda → DynamoDB (query)
+4. **View/Download Image**: User requests image → API Gateway → Lambda → S3 (presigned URLs for all variants)
+5. **Delete Image**: User requests delete → API Gateway → Lambda → S3 (delete all variants) + DynamoDB (soft delete)
 
 ## Roadmap
 
@@ -43,12 +49,30 @@ This project is a scalable image service backend (like Instagram) supporting ima
 - [ ] Local development setup guide
 
 ## Example Metadata Schema (DynamoDB)
-- `image_id` (PK)
-- `user_id`
-- `upload_timestamp`
-- `tags` (list)
-- `description`
-- `s3_url`
+
+| Attribute         | Type    | Description                        |
+|-------------------|---------|------------------------------------|
+| PK                | String  | USER#<user_id>                     |
+| SK                | String  | IMAGE#<created_at>#<image_id>      |
+| image_id          | String  | Unique image identifier            |
+| user_id           | String  | Owner of the image                 |
+| s3_bucket         | String  | S3 bucket name                     |
+| s3_folder         | String  | S3 folder path                     |
+| s3_prefix         | String  | Same as s3_folder                  |
+| content_type      | String  | image/jpeg, image/png              |
+| size_bytes        | Number  | Original image size                |
+| width             | Number  | Image width in pixels              |
+| height            | Number  | Image height in pixels             |
+| aspect_ratio      | String  | Example: 4:3                       |
+| visibility        | String  | public / private / followers       |
+| tags              | List    | Used for filtering                 |
+| description       | String  | Image description                  |
+| created_at        | String  | ISO-8601 timestamp                 |
+| variants          | List    | [original, medium, thumbnail]      |
+| processing_status | String  | pending / completed                |
+| likes_count       | Number  | Engagement metric                  |
+| comments_count    | Number  | Engagement metric                  |
+| is_deleted        | Boolean | Soft delete flag                   |
 
 ## Scalability Considerations
 - Stateless Lambdas for horizontal scaling

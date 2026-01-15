@@ -1,3 +1,6 @@
+# Author: Vivek Kuumar Goswami
+# Date: January 15, 2026
+
 openapi: 3.0.3
 info:
   title: Image Service API
@@ -29,11 +32,21 @@ paths:
                   type: string
       responses:
         '201':
-          description: Image uploaded successfully
+          description: Image uploaded successfully (processing asynchronously)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ImageMetadata'
+                type: object
+                properties:
+                  message:
+                    type: string
+                  image_id:
+                    type: string
+                  processing_status:
+                    type: string
+                    enum: [pending, completed]
+                  metadata:
+                    $ref: '#/components/schemas/ImageMetadata'
     get:
       summary: List all images with filters
       parameters:
@@ -58,7 +71,7 @@ paths:
                   $ref: '#/components/schemas/ImageMetadata'
   /images/{image_id}:
     get:
-      summary: View/download an image
+      summary: View/download an image - returns presigned URLs for all variants
       parameters:
         - in: path
           name: image_id
@@ -67,15 +80,33 @@ paths:
             type: string
       responses:
         '200':
-          description: Image file or presigned URL
+          description: Image metadata and presigned URLs for all variants
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  download_url:
+                  image_id:
                     type: string
-                    description: Presigned URL to download the image
+                  metadata:
+                    $ref: '#/components/schemas/ImageMetadata'
+                  download_urls:
+                    type: object
+                    properties:
+                      original:
+                        type: string
+                        description: Presigned URL for original image
+                      medium:
+                        type: string
+                        description: Presigned URL for 1024x1024 variant
+                      thumbnail:
+                        type: string
+                        description: Presigned URL for 200x200 variant
+                  default_url:
+                    type: string
+                    description: Default presigned URL (medium or original)
+        '404':
+          description: Image not found
     delete:
       summary: Delete an image
       parameters:
@@ -92,18 +123,74 @@ components:
     ImageMetadata:
       type: object
       properties:
+        PK:
+          type: string
+          description: USER#<user_id>
+        SK:
+          type: string
+          description: IMAGE#<created_at>#<image_id>
         image_id:
           type: string
+          description: Unique image identifier
         user_id:
           type: string
-        upload_timestamp:
+          description: Owner of the image
+        s3_bucket:
           type: string
-          format: date-time
+          description: S3 bucket name
+        s3_folder:
+          type: string
+          description: S3 folder path (images/user_id={user_id}/image_id={image_id})
+        s3_prefix:
+          type: string
+          description: Same as s3_folder
+        content_type:
+          type: string
+          description: Image content type (e.g., image/jpeg)
+        size_bytes:
+          type: integer
+          description: Original image size in bytes
+        width:
+          type: integer
+          description: Image width in pixels
+        height:
+          type: integer
+          description: Image height in pixels
+        aspect_ratio:
+          type: string
+          description: Image aspect ratio (e.g., 4:3)
+        visibility:
+          type: string
+          enum: [public, private, followers]
+          description: Image visibility level
         tags:
           type: array
           items:
             type: string
+          description: Image tags for filtering
         description:
           type: string
-        s3_url:
+          description: Image description
+        created_at:
           type: string
+          format: date-time
+          description: Image upload timestamp
+        variants:
+          type: array
+          items:
+            type: string
+            enum: [original, medium, thumbnail]
+          description: Available image variants
+        processing_status:
+          type: string
+          enum: [pending, completed]
+          description: Image processing status
+        likes_count:
+          type: integer
+          description: Number of likes
+        comments_count:
+          type: integer
+          description: Number of comments
+        is_deleted:
+          type: boolean
+          description: Soft delete flag
