@@ -12,24 +12,30 @@ paths:
   /images:
     post:
       summary: Upload an image with metadata
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+          description: User identifier (required)
+        - in: query
+          name: tags
+          schema:
+            type: string
+          description: Comma-separated tags (e.g., "tag1,tag2")
+        - in: query
+          name: description
+          schema:
+            type: string
+          description: Image description
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/octet-stream:
             schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                user_id:
-                  type: string
-                tags:
-                  type: array
-                  items:
-                    type: string
-                description:
-                  type: string
+              type: string
+              format: binary
       responses:
         '201':
           description: Image uploaded successfully (processing asynchronously)
@@ -52,29 +58,47 @@ paths:
       parameters:
         - in: query
           name: user_id
+          required: true
           schema:
             type: string
-          description: Filter by user ID
+          description: Filter by user ID (required)
         - in: query
           name: tag
           schema:
             type: string
-          description: Filter by tag
+          description: Filter by tag (optional)
+        - in: query
+          name: visibility
+          schema:
+            type: string
+            enum: [public, private, followers]
+          description: Filter by visibility (optional)
       responses:
         '200':
           description: List of images
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ImageMetadata'
-  /images/{image_id}:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  user_id:
+                    type: string
+                  tag_filter:
+                    type: string
+                  visibility_filter:
+                    type: string
+                  images:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ImageMetadata'
+  /images/{imageId}:
     get:
       summary: View/download an image - returns presigned URLs for all variants
       parameters:
         - in: path
-          name: image_id
+          name: imageId
           required: true
           schema:
             type: string
@@ -111,7 +135,7 @@ paths:
       summary: Delete an image
       parameters:
         - in: path
-          name: image_id
+          name: imageId
           required: true
           schema:
             type: string

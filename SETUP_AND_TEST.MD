@@ -59,6 +59,15 @@ export AWS_DEFAULT_REGION=us-east-1
 
 ---
 
+## 3. Create a bucket for artifcats
+
+```bash
+
+aws s3 mb s3://sam-artifacts
+```
+---
+
+
 ## 3. Build & Deploy
 
 ```bash
@@ -67,14 +76,21 @@ cd c:\Users\vivek\nerd\imageservice
 sam build
 
 sam deploy `
-  --endpoint-url http://localhost:4566 `
   --stack-name image-service-stack `
   --region us-east-1 `
+  --s3-bucket sam-artifacts `
+  --capabilities CAPABILITY_IAM `
   --no-confirm-changeset `
-  --capabilities CAPABILITY_IAM
-```
+  --endpoint-url http://localhost:4566
 
 ---
+
+## 3. Create Build & Deploy one liner
+
+```bash
+localstack start -d; aws s3 mb s3://sam-artifacts --endpoint-url http://localhost:4566; sam build; sam deploy --stack-name image-service-stack --region us-east-1 --s3-bucket sam-artifacts --capabilities CAPABILITY_IAM --no-confirm-changeset
+---
+
 
 ## 4. Start API
 

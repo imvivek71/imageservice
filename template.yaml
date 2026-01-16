@@ -1,127 +1,87 @@
-# Author: Vivek Kuumar Goswami
-# Date: January 15, 2026
-
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Image Service API - LocalStack SAM Template
 
 Globals:
   Function:
-    Runtime: python3.8
+    Runtime: python3.12
     Timeout: 30
-    Handler: app.lambda_handler
     Environment:
       Variables:
         TABLE_NAME: !Ref ImageTable
         BUCKET_NAME: !Ref ImageBucket
 
 Resources:
+
   ImageApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: dev
-      EndpointConfiguration: REGIONAL
 
   ImageUploadFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: upload.lambda_handler
-      Policies:
-        - S3CrudPolicy:
-            BucketName: !Ref ImageBucket
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ImageTable
+      Handler: handlers.upload.lambda_handler
       Events:
-        ApiEvent:
+        UploadApi:
           Type: Api
           Properties:
             RestApiId: !Ref ImageApi
             Path: /images
-            Method: post
+            Method: POST
 
   ImageListFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: list.lambda_handler
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref ImageTable
+      Handler: handlers.list.lambda_handler
       Events:
-        ApiEvent:
+        ListApi:
           Type: Api
           Properties:
             RestApiId: !Ref ImageApi
             Path: /images
-            Method: get
+            Method: GET
 
   ImageGetFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: get.lambda_handler
-      Policies:
-        - S3ReadPolicy:
-            BucketName: !Ref ImageBucket
-        - DynamoDBReadPolicy:
-            TableName: !Ref ImageTable
+      Handler: handlers.get.lambda_handler
       Events:
-        ApiEvent:
+        GetApi:
           Type: Api
           Properties:
             RestApiId: !Ref ImageApi
-            Path: /images/{image_id}
-            Method: get
+            Path: /images/{imageId}
+            Method: GET
 
   ImageDeleteFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: delete.lambda_handler
-      Policies:
-        - S3CrudPolicy:
-            BucketName: !Ref ImageBucket
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ImageTable
+      Handler: handlers.delete.lambda_handler
       Events:
-        ApiEvent:
+        DeleteApi:
           Type: Api
           Properties:
             RestApiId: !Ref ImageApi
-            Path: /images/{image_id}
-            Method: delete
+            Path: /images/{imageId}
+            Method: DELETE
 
   ImageProcessorFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: image_processor.lambda_handler
+      Handler: handlers.image_processor.lambda_handler
       Timeout: 60
-      MemorySize: 1024
-      Policies:
-        - S3CrudPolicy:
-            BucketName: !Ref ImageBucket
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ImageTable
-      Events:
-        S3Event:
-          Type: S3
-          Properties:
-            Bucket: !Ref ImageBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: prefix
-                    Value: images/user_id=
-                  - Name: suffix
-                    Value: original.jpg
 
   ImageTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: ImageService
+      TableName: image-metadata
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
           AttributeType: S
@@ -132,7 +92,6 @@ Resources:
           KeyType: HASH
         - AttributeName: SK
           KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
 
   ImageBucket:
     Type: AWS::S3::Bucket
@@ -141,13 +100,11 @@ Resources:
 
 Outputs:
   ApiEndpoint:
-    Description: "API Gateway endpoint URL for dev environment"
+    Description: API Gateway endpoint
     Value: !Sub "http://${ImageApi}.execute-api.${AWS::Region}.amazonaws.com/dev"
-  
+
   ImageTableName:
-    Description: "DynamoDB Table Name"
     Value: !Ref ImageTable
-  
+
   ImageBucketName:
-    Description: "S3 Bucket Name"
     Value: !Ref ImageBucket
