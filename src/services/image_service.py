@@ -39,18 +39,19 @@ class ImageService:
         return None
     
     @staticmethod
-    def get_images_by_user(user_id, tag=None):
+    def get_images_by_user(user_id, tag=None, visibility=None):
         """
-        Get all images for a user with optional tag filtering.
+        Get all images for a user with optional tag and visibility filtering.
         
         Args:
             user_id: User identifier
             tag: Optional tag to filter by
+            visibility: Optional visibility to filter by (public, private, followers)
         
         Returns:
             List of image items
         """
-        logger.info(f"Getting images for user: {user_id}")
+        logger.info(f"Getting images for user: {user_id}, tag: {tag}, visibility: {visibility}")
         pk = f"USER#{user_id}"
         images = DynamoDBService.query_by_pk(pk, reverse=True)
         
@@ -62,7 +63,13 @@ class ImageService:
         if tag:
             logger.info(f"Filtering by tag: {tag}")
             images = [img for img in images if tag in img.get('tags', [])]
-            logger.info(f"Found {len(images)} images with tag")
+            logger.info(f"Found {len(images)} images with tag '{tag}'")
+        
+        # Filter by visibility if provided
+        if visibility:
+            logger.info(f"Filtering by visibility: {visibility}")
+            images = [img for img in images if img.get('visibility') == visibility]
+            logger.info(f"Found {len(images)} images with visibility '{visibility}'")
         
         return images
     

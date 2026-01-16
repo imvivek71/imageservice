@@ -4,6 +4,7 @@
   "headers": {},
   "queryStringParameters": {
     "user_id": "user123",
-    "tag": "landscape"
+    "tag": "landscape",
+    "visibility": "public"
   }
 }

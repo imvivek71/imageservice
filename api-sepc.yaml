@@ -58,23 +58,41 @@ paths:
       parameters:
         - in: query
           name: user_id
+          required: true
           schema:
             type: string
-          description: Filter by user ID
+          description: Filter by user ID (required)
         - in: query
           name: tag
           schema:
             type: string
-          description: Filter by tag
+          description: Filter by tag (optional)
+        - in: query
+          name: visibility
+          schema:
+            type: string
+            enum: [public, private, followers]
+          description: Filter by visibility (optional)
       responses:
         '200':
           description: List of images
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ImageMetadata'
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  user_id:
+                    type: string
+                  tag_filter:
+                    type: string
+                  visibility_filter:
+                    type: string
+                  images:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ImageMetadata'
   /images/{imageId}:
     get:
       summary: View/download an image - returns presigned URLs for all variants
