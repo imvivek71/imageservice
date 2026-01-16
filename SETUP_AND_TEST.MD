@@ -85,6 +85,13 @@ sam deploy `
 
 ---
 
+## 3. Create Build & Deploy one liner
+
+```bash
+localstack start -d; aws s3 mb s3://sam-artifacts --endpoint-url http://localhost:4566; sam build; sam deploy --stack-name image-service-stack --region us-east-1 --s3-bucket sam-artifacts --capabilities CAPABILITY_IAM --no-confirm-changeset
+---
+
+
 ## 4. Start API
 
 ```bash

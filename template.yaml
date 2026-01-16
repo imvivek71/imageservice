@@ -22,7 +22,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: upload.lambda_handler
+      Handler: handlers.upload.lambda_handler
       Events:
         UploadApi:
           Type: Api
@@ -35,7 +35,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: list.lambda_handler
+      Handler: handlers.list.lambda_handler
       Events:
         ListApi:
           Type: Api
@@ -47,8 +47,8 @@ Resources:
   ImageGetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: get.lambda_handler
       CodeUri: src/
+      Handler: handlers.get.lambda_handler
       Events:
         GetApi:
           Type: Api
@@ -60,8 +60,8 @@ Resources:
   ImageDeleteFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: delete.lambda_handler
       CodeUri: src/
+      Handler: handlers.delete.lambda_handler
       Events:
         DeleteApi:
           Type: Api
@@ -69,6 +69,13 @@ Resources:
             RestApiId: !Ref ImageApi
             Path: /images/{imageId}
             Method: DELETE
+
+  ImageProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers.image_processor.lambda_handler
+      Timeout: 60
 
   ImageTable:
     Type: AWS::DynamoDB::Table
